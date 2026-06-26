@@ -51,8 +51,8 @@ export function extractGithubRepo(url: string) {
 // ============================================
 // MAM 1 Paciran — School Identity
 // ============================================
-export const APP_NAME = "MAMSAKA";
-export const APP_FULL_NAME = "MAMSAKA — Madrasah Aliyah Muhammadiyah 1 Paciran";
+export const APP_NAME = "Build AI - MAMSAKA";
+export const APP_FULL_NAME = "Build AI - MAMSAKA — Madrasah Aliyah Muhammadiyah 1 Paciran";
 export const SCHOOL_NAME = "MA Muhammadiyah 1 Paciran";
 export const SCHOOL_SHORT = "MAM 1 Paciran";
 export const APP_DESCRIPTION =

@@ -56,11 +56,11 @@ export default async function HomePage() {
 
           <ScrollReveal animation="fade-up" delay={200}>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4">
-              Platform Portofolio{" "}
               <span className="text-amber-400 relative inline-block">
-                MAMSAKA
+                Build AI
                 <span className="absolute -bottom-1 left-0 right-0 h-1 bg-amber-400/30 rounded-full" />
-              </span>
+              </span>{" - "}
+              MAMSAKA
             </h1>
           </ScrollReveal>
 
@@ -159,7 +159,7 @@ export default async function HomePage() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">🌟 Karya Terbaik Siswa</h2>
-                <p className="text-gray-500 mt-1">Portofolio digital paling banyak diapresiasi</p>
+                <p className="text-gray-500 mt-1">Portofolio digital Build AI - MAMSAKA paling banyak diapresiasi</p>
               </div>
               <Link
                 href="/explore"

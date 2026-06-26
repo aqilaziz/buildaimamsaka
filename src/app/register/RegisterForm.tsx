@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, User, Mail, Lock } from "lucide-react";
+import { Loader2, User, Mail, Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
 
 export function RegisterForm() {
   const supabase = createClient();
@@ -13,12 +13,15 @@ export function RegisterForm() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess(false);
 
     if (password.length < 6) {
       setError("Password minimal 6 karakter");
@@ -27,7 +30,7 @@ export function RegisterForm() {
 
     setLoading(true);
 
-    const { error: authError } = await supabase.auth.signUp({
+    const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -35,6 +38,7 @@ export function RegisterForm() {
           full_name: fullName,
           username: username,
         },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
@@ -44,8 +48,15 @@ export function RegisterForm() {
       return;
     }
 
-    router.push("/dashboard?welcome=1");
-    router.refresh();
+    // Jika user perlu konfirmasi email
+    if (data?.user && data.user.identities?.length === 0) {
+      setError("Email sudah terdaftar. Silakan login.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
+    setSuccess(true);
   };
 
   const handleGoogleRegister = async () => {
@@ -56,6 +67,44 @@ export function RegisterForm() {
       },
     });
   };
+
+  if (success) {
+    return (
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+          <CheckCircle size={32} className="text-green-600" />
+        </div>
+        <h2 className="text-xl font-bold text-gray-900">Cek Email Kamu! 📧</h2>
+        <p className="text-gray-600 leading-relaxed">
+          Kami telah mengirim link konfirmasi ke{" "}
+          <span className="font-semibold text-gray-900">{email}</span>.
+        </p>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800 text-left space-y-2">
+          <p className="font-semibold">📋 Langkah selanjutnya:</p>
+          <ol className="list-decimal list-inside space-y-1">
+            <li>Buka inbox email kamu</li>
+            <li>Cari email dari <strong>MAMSAKA</strong> (cek folder spam jika tidak ada)</li>
+            <li>Klik tombol <strong>&quot;Konfirmasi Email&quot;</strong> di dalam email</li>
+            <li>Setelah terkonfirmasi, kamu bisa langsung login</li>
+          </ol>
+        </div>
+        <div className="pt-4 space-y-3">
+          <Link
+            href="/login"
+            className="block w-full py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+          >
+            Ke Halaman Login
+          </Link>
+          <button
+            onClick={() => setSuccess(false)}
+            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            Daftar dengan email lain
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleRegister} className="space-y-4">
@@ -115,14 +164,22 @@ export function RegisterForm() {
         <div className="relative">
           <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Minimal 6 karakter"
             required
             minLength={6}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full pl-10 pr-12 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
         </div>
       </div>
 

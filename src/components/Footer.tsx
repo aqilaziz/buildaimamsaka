@@ -11,7 +11,7 @@ export function Footer() {
             <div className="flex items-center gap-3 mb-3">
               <Image src="/logo.png" alt="MAM 1 Paciran" width={40} height={40} className="rounded-md bg-white p-0.5" />
               <div>
-                <h3 className="font-bold text-white">MAMSAKA</h3>
+                <h3 className="font-bold text-white">Build AI - MAMSAKA</h3>
                 <p className="text-xs text-amber-400">MA Muhammadiyah 1 Paciran</p>
               </div>
             </div>

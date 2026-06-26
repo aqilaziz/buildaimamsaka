@@ -51,7 +51,7 @@ export function Navbar() {
             />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-bold text-amber-600">MAM 1 PACIRAN</span>
-              <span className="text-[10px] text-primary-600 font-medium">MAMSAKA</span>
+              <span className="text-[10px] text-primary-600 font-medium">Build AI - MAMSAKA</span>
             </div>
           </Link>
 
