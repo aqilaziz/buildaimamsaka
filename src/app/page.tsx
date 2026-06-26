@@ -238,9 +238,9 @@ export default async function HomePage() {
       </section>
 
       {/* ========== CTA ========== */}
-      <section className="relative bg-gradient-to-r from-primary-800 to-primary-900 text-white overflow-hidden">
-        {/* Animated background */}
-        <div className="absolute inset-0 opacity-10">
+      <section className="relative bg-gradient-to-r from-primary-800 to-primary-900 text-white">
+        {/* Animated background — confined overflow */}
+        <div className="absolute inset-0 overflow-hidden opacity-10">
           <div className="absolute inset-0" style={{
             backgroundImage: "radial-gradient(circle at 30% 50%, #f59e0b 1px, transparent 1px), radial-gradient(circle at 70% 50%, #10b981 1px, transparent 1px)",
             backgroundSize: "50px 50px"
