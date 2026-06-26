@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { Loader2, Mail, Send, ArrowLeft, CheckCircle } from "lucide-react";
 
 export function ForgotPasswordForm() {
-  const supabase = createClient();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,22 +15,73 @@ export function ForgotPasswordForm() {
     setError("");
     setLoading(true);
 
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    });
+    try {
+      const origin = window.location.origin;
 
-    if (resetError) {
-      setError(
-        resetError.message === "User not found"
-          ? "Email tidak ditemukan. Periksa kembali."
-          : resetError.message
+      // 1. Minta Supabase generate reset token
+      const supabaseRes = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/recover`,
+        {
+          method: "POST",
+          headers: {
+            "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
       );
-      setLoading(false);
-      return;
-    }
 
-    setLoading(false);
-    setSent(true);
+      if (!supabaseRes.ok) {
+        const err = await supabaseRes.json();
+        throw new Error(err.msg || "Gagal memproses reset");
+      }
+
+      // Supabase akan mengirim email secara otomatis (tapi mungkin gagal tanpa SMTP)
+      // Kita kirim juga email via Resend sebagai backup/primary
+      const resetLink = `${origin}/auth/callback?type=recovery`;
+      const emailHtml = `
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#f9fafb">
+          <div style="text-align:center;padding:32px 24px;background:#1e40af;border-radius:12px 12px 0 0">
+            <h1 style="color:#f59e0b;margin:0;font-size:24px">Build AI - MAMSAKA</h1>
+            <p style="color:#93c5fd;margin:8px 0 0">MA Muhammadiyah 1 Paciran</p>
+          </div>
+          <div style="background:white;padding:32px 24px;border-radius:0 0 12px 12px;border:1px solid #e5e7eb">
+            <h2 style="color:#1f2937;margin:0 0 16px">Reset Password</h2>
+            <p style="color:#6b7280;line-height:1.6;margin-bottom:16px">
+              Kami menerima permintaan reset password untuk akun <strong>${email}</strong>.
+            </p>
+            <p style="color:#6b7280;line-height:1.6;margin-bottom:24px">
+              Cek email dari <strong>Supabase</strong> di inbox kamu untuk link reset password.
+              Jika tidak ada, coba lagi atau hubungi admin.
+            </p>
+            <div style="text-align:center;padding:16px;background:#fef3c7;border-radius:8px;border:1px solid #fcd34d">
+              <p style="color:#92400e;font-size:13px;margin:0">
+                📧 <strong>Penting:</strong> Periksa folder <u>Spam</u> atau <u>Promotions</u> jika email tidak muncul di inbox utama.
+              </p>
+            </div>
+            <p style="color:#9ca3af;font-size:12px;margin-top:24px">
+              Tidak meminta reset? Abaikan email ini.
+            </p>
+          </div>
+        </div>`;
+
+      // Kirim notifikasi via Resend (Next.js API)
+      await fetch("/api/auth/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: email,
+          subject: "Reset Password — Periksa Inbox Kamu",
+          html: emailHtml,
+        }),
+      });
+
+      setSent(true);
+    } catch (err: any) {
+      setError(err.message || "Gagal mengirim email reset");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (sent) {
@@ -41,7 +90,7 @@ export function ForgotPasswordForm() {
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
           <CheckCircle size={32} className="text-green-600" />
         </div>
-        <h2 className="text-xl font-bold text-gray-900">Link Terkirim! 📧</h2>
+        <h2 className="text-xl font-bold text-gray-900">Cek Email Kamu! 📧</h2>
         <p className="text-gray-600 leading-relaxed">
           Kami telah mengirim link reset password ke{" "}
           <span className="font-semibold text-gray-900">{email}</span>.
@@ -50,8 +99,8 @@ export function ForgotPasswordForm() {
           <p className="font-semibold">📋 Langkah selanjutnya:</p>
           <ol className="list-decimal list-inside space-y-1">
             <li>Buka inbox email kamu</li>
-            <li>Cari email dari <strong>MAMSAKA</strong> (cek folder spam)</li>
-            <li>Klik link <strong>&quot;Reset Password&quot;</strong> di dalam email</li>
+            <li>Cari email dari <strong>MAMSAKA</strong> atau <strong>Supabase</strong> (cek folder spam)</li>
+            <li>Klik link <strong>Reset Password</strong> di dalam email</li>
             <li>Buat password baru di halaman yang muncul</li>
           </ol>
         </div>
@@ -82,8 +131,7 @@ export function ForgotPasswordForm() {
       )}
 
       <p className="text-sm text-gray-500 leading-relaxed">
-        Jangan khawatir! Masukkan alamat email yang terdaftar dan kami akan mengirimkan
-        link untuk mereset password kamu.
+        Masukkan alamat email yang terdaftar. Kami akan mengirimkan link untuk mereset password kamu.
       </p>
 
       <div>
@@ -106,11 +154,7 @@ export function ForgotPasswordForm() {
         disabled={loading}
         className="w-full py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
       >
-        {loading ? (
-          <Loader2 size={18} className="animate-spin" />
-        ) : (
-          <Send size={18} />
-        )}
+        {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
         Kirim Link Reset
       </button>
 
